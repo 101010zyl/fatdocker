@@ -53,6 +53,8 @@ RUN apt-get update && \
     unzip \
     tar \
     jq \
+    tree \
+
     # Languages & runtimes
     nodejs \
     npm \
