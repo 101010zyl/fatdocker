@@ -54,6 +54,7 @@ RUN apt-get update && \
     tar \
     jq \
     tree \
+    bear \
 
     # Languages & runtimes
     nodejs \
