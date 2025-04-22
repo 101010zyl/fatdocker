@@ -110,20 +110,45 @@ RUN apt-get install -y \
     python3.13-dev \
     python3.13-venv
 
-# Create python virtual environments for each version
-RUN mkdir -p /venvs
-RUN python3.8 -m venv /venvs/py38 --prompt 3.8 && \
-    python3.9 -m venv /venvs/py39 --prompt 3.9 && \
-    python3.10 -m venv /venvs/py310 --prompt 3.10 && \
-    python3.11 -m venv /venvs/py311 --prompt 3.11 && \
-    python3.12 -m venv /venvs/py312 --prompt 3.12 && \
-    python3.13 -m venv /venvs/py313 --prompt 3.13
+# Create a non-root user with sudo privileges
+ARG USERNAME=user
+ARG USER_UID=1000
+ARG USER_GID=1000
 
-RUN echo "source /venvs/py311/bin/activate" >> /root/.bashrc
+# Create the user
+RUN groupadd --gid $USER_GID $USERNAME \
+    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME \
+    # Add sudo support
+    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME
 
-# Create a workspace directory
-RUN mkdir -p /workspace
-WORKDIR /workspace
+# Create workspace directory
+RUN mkdir -p /home/$USERNAME/workspace && \
+    chown -R $USERNAME:$USERNAME /home/$USERNAME/workspace
 
-# Set a default command to keep the container running
-CMD ["/bin/bash"]
+# Create python virtual environments directly in the user's home directory
+RUN mkdir -p /home/$USERNAME/venvs && \
+    chown -R $USERNAME:$USERNAME /home/$USERNAME/venvs
+
+# Create the venvs as the user (avoids permission issues)
+USER $USERNAME
+RUN python3.8 -m venv /home/$USERNAME/venvs/py38 --prompt 3.8 && \
+    python3.9 -m venv /home/$USERNAME/venvs/py39 --prompt 3.9 && \
+    python3.10 -m venv /home/$USERNAME/venvs/py310 --prompt 3.10 && \
+    python3.11 -m venv /home/$USERNAME/venvs/py311 --prompt 3.11 && \
+    python3.12 -m venv /home/$USERNAME/venvs/py312 --prompt 3.12 && \
+    python3.13 -m venv /home/$USERNAME/venvs/py313 --prompt 3.13
+
+# Switch back to root for remaining setup
+USER root
+
+# Set up environments for both root and the user
+RUN echo "source /home/$USERNAME/venvs/py311/bin/activate" >> /root/.bashrc
+RUN echo "source ~/venvs/py311/bin/activate" >> /home/$USERNAME/.bashrc
+RUN echo "cd ~/workspace" >> /home/$USERNAME/.bashrc
+
+# Set default working directory to user's workspace
+WORKDIR /home/$USERNAME/workspace
+
+# Switch back to the user for container runtime
+USER $USERNAME

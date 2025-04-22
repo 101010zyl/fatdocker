@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Use host user's username and UID/GID
+        USERNAME: ${USER:-user}
+        USER_UID: ${UID:-1000}
+        USER_GID: ${GID:-1000}
+    image: fatdocker:2.0
+    container_name: ${PROJECT_NAME:-fatdocker_dev}
+    volumes:
+      - ${WORKSPACE:-./workspace}:/home/${USER:-user}/workspace
+      # Docker socket for Docker-in-Docker capability
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      # Map the ports defined in environment variables, with defaults
+      - "${PORT1:-8080}:${PORT1:-8080}"
+      - "${PORT2:-8081}:${PORT2:-8081}"
+    # Use host network mode (optional, can be commented out if not needed)
+    # network_mode: "host"
+    
+    # For GPU support (uncomment if needed)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+    
+    # Keep the container running
+    tty: true
+    stdin_open: true
+    
+    # Restart policy
+    restart: unless-stopped
+    
+    # Run as non-root user
+    user: ${UID}:${GID}
+    
+    # Working directory
+    working_dir: /home/${USER:-user}/workspace
+    
+    # Command to run on startup
+    command: /bin/bash
