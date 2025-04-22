@@ -52,10 +52,15 @@ RUN apt-get update && \
     zip \
     unzip \
     tar \
+    gzip \
+    bzip2 \
+    xz-utils \
+    lzop \
+    findutils \
+    cpio \
     jq \
     tree \
     bear \
-
     # Languages & runtimes
     nodejs \
     npm \

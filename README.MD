@@ -1,12 +1,12 @@
 # fatdocker
 
 ---
-Docker with anything to use. Never reduce package and clean cache.
+Docker with anything I use. Never reduce package and clean cache.
 
 ## Usage
 
 ```bash
-git clone 
+git clone https://github.com/101010zyl/fatdocker.git
 cd fatdocker
 ```
 1. Build the image
